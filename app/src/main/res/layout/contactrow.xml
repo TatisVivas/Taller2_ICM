@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/contactrow">
+
+    <ImageView
+        android:id="@+id/contactPhoto"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_weight="2"
+        android:layout_margin="4dp"
+        app:srcCompat="@drawable/baseline_person_24" />
+
+    <TextView
+        android:id="@+id/ContactID"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="1" />
+
+    <TextView
+        android:id="@+id/ContactName"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:gravity="center_vertical"
+        android:layout_weight="7"
+        android:text="Name" />
+</LinearLayout>

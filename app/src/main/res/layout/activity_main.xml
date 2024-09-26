@@ -8,10 +8,46 @@
     tools:context=".MainActivity">
 
     <ImageButton
-        android:id="@+id/imageButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:srcCompat="@drawable/contacts"
-        tools:layout_editor_absoluteX="173dp"
-        tools:layout_editor_absoluteY="127dp" />
+        android:id="@+id/contacts"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_marginStart="64dp"
+        android:layout_marginTop="55dp"
+        android:layout_marginEnd="64dp"
+        android:background="@android:color/transparent"
+        android:scaleType="centerInside"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/contacts" />
+
+    <ImageButton
+        android:id="@+id/images"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_marginStart="64dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="64dp"
+        android:background="@android:color/transparent"
+        android:scaleType="centerInside"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/contacts"
+        app:srcCompat="@drawable/camera" />
+
+    <ImageButton
+        android:id="@+id/map"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_marginStart="64dp"
+        android:layout_marginEnd="64dp"
+        android:layout_marginBottom="55dp"
+        android:background="@android:color/transparent"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/osmap" />
 </androidx.constraintlayout.widget.ConstraintLayout>
