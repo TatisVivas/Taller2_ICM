@@ -119,7 +119,7 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (location != null) {
                     mMap.clear()
                     drawMarker(location, address, R.drawable.baseline_place_24)
-                    mMap.moveCamera(CameraUpdateFactory.zoomTo(10f))
+                    mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
                 }
             }
