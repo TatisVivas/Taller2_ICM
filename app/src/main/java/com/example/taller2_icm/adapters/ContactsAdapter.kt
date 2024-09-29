@@ -1,4 +1,4 @@
-package adapters
+package com.example.taller2_icm.adapters
 
 import android.content.Context
 import android.database.Cursor

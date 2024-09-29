@@ -1,6 +1,6 @@
 package com.example.taller2_icm
 
-import adapters.ContactsAdapter
+import com.example.taller2_icm.adapters.ContactsAdapter
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.ContactsContract

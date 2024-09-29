@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Taller2_ICM</string>
+    <string name="title_activity_location">LocationActivity</string>
 </resources>
