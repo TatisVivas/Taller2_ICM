@@ -116,12 +116,20 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val address = binding.address.text.toString()
                 val location = findLocation(address)
+                val addressMarker= findAddress(location!!)
                 if (location != null) {
                     mMap.clear()
-                    drawMarker(location, address, R.drawable.baseline_place_24)
+                    drawMarker(location, addressMarker, R.drawable.baseline_place_24)
                     mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
+
+                    currentLocation?.let { currentLoc ->
+                        val distance = distance(currentLoc.latitude, currentLoc.longitude, location.latitude, location.longitude)
+                        val formattedDistance = String.format("%.3f", distance)
+                        Toast.makeText(this, "Distance to marker: $formattedDistance meters", Toast.LENGTH_SHORT).show()
+                    }
                 }
+
             }
             return@setOnEditorActionListener true
         }
@@ -138,8 +146,12 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
         mMap.setOnMapLongClickListener {
             val address = this.findAddress(it)
-            drawMarker(it,address,R.drawable.baseline_place_24)
-
+            drawMarker(it, address, R.drawable.baseline_place_24)
+            currentLocation?.let { location ->
+                val distance = distance(location.latitude, location.longitude, it.latitude, it.longitude)
+                val formattedDistance = String.format("%.3f", distance)
+                Toast.makeText(this, "Distance to marker: $formattedDistance meters", Toast.LENGTH_SHORT).show()
+            }
         }
 
     }
@@ -160,7 +172,7 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                     if (currentLocation == null) {
                         currentLocation = location
                         val currentLatLng = LatLng(currentLocation!!.latitude, currentLocation!!.longitude)
-                        mMap.addMarker(MarkerOptions().position(currentLatLng).title("Current Location"))
+                        mMap.addMarker(MarkerOptions().position(currentLatLng).title("Current Location ${findAddress(currentLatLng)}"))
                         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
                     } else {
                         if (distance(currentLocation!!.latitude, currentLocation!!.longitude, location.latitude, location.longitude) > 30) {
@@ -230,6 +242,8 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
         val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
         return RADIUD_OF_EARTH_KM * c * 1000 // Convert to meters
     }
+
+    //--------------------------------------------------------------------------------
 
     private fun drawMarker(location: LatLng, description: String?, icon: Int) {
         val addressMarker = mMap.addMarker(MarkerOptions().position(location).icon(bitmapDescriptorFromVector(this, icon)))!!
