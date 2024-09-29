@@ -54,16 +54,16 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var binding: ActivityLocationBinding
     private lateinit var mMap: GoogleMap
     private lateinit var geocoder: Geocoder
+
     private var darkSensor: Sensor? = null
     private lateinit var sensorManager: SensorManager
     private var ligthSensor: Sensor? = null
     private lateinit var sensorEventListener: SensorEventListener
+
     private var currentLocation: Location? = null
     private val RADIUD_OF_EARTH_KM = 6371
-    private lateinit var locationClient: FusedLocationProviderClient
-    private lateinit var locationRequest: LocationRequest
-    private lateinit var locationCallback: LocationCallback
-    private val locations = mutableListOf<JSONObject>()
+
+
 
     private val locationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -86,6 +86,11 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     )
+    private lateinit var locationClient: FusedLocationProviderClient
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
+    private val locations = mutableListOf<JSONObject>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,10 +111,6 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
         // Request location permissions
         locationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
 
-        // Get the SupportMapFragment and notify when the map is ready to be used
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
 
         binding.address.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -124,30 +125,23 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
             return@setOnEditorActionListener true
         }
+        // Get the SupportMapFragment and notify when the map is ready to be used
+        val mapFragment = supportFragmentManager
+            .findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationClient.lastLocation.addOnSuccessListener { location ->
-                if (location != null) {
-                    currentLocation = location
-                    val currentLatLng = LatLng(currentLocation!!.latitude, currentLocation!!.longitude)
-                    mMap.addMarker(MarkerOptions().position(currentLatLng).title("Current Location"))
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
-                } else {
-                    Toast.makeText(this, "Current location is not available", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } else {
-            Toast.makeText(this, "Location permission not granted", Toast.LENGTH_SHORT).show()
-        }
+        mMap = googleMap
 
         mMap.setOnMapLongClickListener {
             val address = this.findAddress(it)
-            drawMarker(it, address, R.drawable.baseline_place_24)
+            drawMarker(it,address,R.drawable.baseline_place_24)
+
         }
+
     }
 
     private fun createLocationRequest(): LocationRequest {
@@ -183,7 +177,7 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
         val client: SettingsClient = LocationServices.getSettingsClient(this)
         val task = client.checkLocationSettings(builder.build())
-        task.addOnSuccessListener {
+        task.addOnSuccessListener { locationSettingsResponse ->
             startLocationUpdates()
         }
         task.addOnFailureListener { exception ->
