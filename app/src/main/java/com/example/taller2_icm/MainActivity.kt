@@ -20,6 +20,9 @@ class MainActivity : AppCompatActivity() {
         binding.images.setOnClickListener {
             startActivity(Intent(baseContext, ImagesActivity::class.java))
         }
+        binding.map.setOnClickListener {
+            startActivity(Intent(baseContext, LocationActivity::class.java))
+        }
 
 
     }
