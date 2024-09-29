@@ -24,8 +24,6 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-
-
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -54,142 +52,119 @@ import java.sql.Date
 
 class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var binding: ActivityLocationBinding
-
     private lateinit var mMap: GoogleMap
-    //direcciones y Geocoder
     private lateinit var geocoder: Geocoder
-
-
     private var darkSensor: Sensor? = null
-    //sensores de luz
-    private lateinit var sensorManager : SensorManager
+    private lateinit var sensorManager: SensorManager
     private var ligthSensor: Sensor? = null
     private lateinit var sensorEventListener: SensorEventListener
-
     private var currentLocation: Location? = null
+    private val RADIUD_OF_EARTH_KM = 6371
+    private lateinit var locationClient: FusedLocationProviderClient
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
+    private val locations = mutableListOf<JSONObject>()
 
-    val RADIUD_OF_EARTH_KM = 6371
-
-    //permission
-
-    val locationPermission = registerForActivityResult(
+    private val locationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
         ActivityResultCallback {
-            if(it) {
+            if (it) {
                 locationSettings()
-            }else
+            } else {
                 Toast.makeText(this, "NO PERMISSION", Toast.LENGTH_SHORT).show()
-
+            }
         }
-
     )
 
-    val locationSettings = registerForActivityResult(
+    private val locationSettings = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult(),
         ActivityResultCallback {
-            if(it.resultCode== RESULT_OK){
+            if (it.resultCode == RESULT_OK) {
                 startLocationUpdates()
-            }
-            else{
+            } else {
                 Toast.makeText(this, "GPS OFF!", Toast.LENGTH_SHORT).show()
             }
-
         }
     )
-
-    private lateinit var locationClient: FusedLocationProviderClient
-    var locations = mutableListOf<JSONObject>()
-    //request y callback
-    private lateinit var locationRequest: LocationRequest
-    private lateinit var locationCallback: LocationCallback //tienen que ser del gms location
-    //la dependencia en grade
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityLocationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //para la ubicación actual
-        locationClient= LocationServices.getFusedLocationProviderClient(this)//es hija de activity entinces es base también
-        locationRequest= createLocationRequest()
-        locationCallback= createLocationCallback()
+        // Initialize location services
+        locationClient = LocationServices.getFusedLocationProviderClient(this)
+        locationRequest = createLocationRequest()
+        locationCallback = createLocationCallback()
 
-        //sensores y geocoder
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager //castear porque necesito el tipo de sensor manager
+        // Initialize sensors and geocoder
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         ligthSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
         sensorEventListener = createSensorEventListener()
         geocoder = Geocoder(baseContext)
 
-        //pedir el permiso
-        locationPermission.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        // Request location permissions
+        locationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        // Get the SupportMapFragment and notify when the map is ready to be used
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         binding.address.setOnEditorActionListener { v, actionId, event ->
-            if(actionId == EditorInfo.IME_ACTION_SEARCH) {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val address = binding.address.text.toString()
                 val location = findLocation(address)
-                if(location!=null) {
+                if (location != null) {
                     mMap.clear()
                     drawMarker(location, address, R.drawable.baseline_place_24)
                     mMap.moveCamera(CameraUpdateFactory.zoomTo(10f))
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
-
                 }
             }
             return@setOnEditorActionListener true
         }
-
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
 
-override fun onMapReady(googleMap: GoogleMap) {
-    mMap = googleMap
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    currentLocation = location
+                    val currentLatLng = LatLng(currentLocation!!.latitude, currentLocation!!.longitude)
+                    mMap.addMarker(MarkerOptions().position(currentLatLng).title("Current Location"))
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+                } else {
+                    Toast.makeText(this, "Current location is not available", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(this, "Location permission not granted", Toast.LENGTH_SHORT).show()
+        }
 
-    if (currentLocation != null) {
-        val currentLatLng = LatLng(currentLocation!!.latitude, currentLocation!!.longitude)
-        mMap.addMarker(MarkerOptions().position(currentLatLng).title("Current Location"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
-    } else {
-        Toast.makeText(this, "Current location is not available", Toast.LENGTH_SHORT).show()
+        mMap.setOnMapLongClickListener {
+            val address = this.findAddress(it)
+            drawMarker(it, address, R.drawable.baseline_place_24)
+        }
     }
-    mMap.setOnMapLongClickListener {
-        val address = this.findAddress(it)
-        drawMarker(it,address,R.drawable.baseline_place_24)
-
-    }
-}
 
     private fun createLocationRequest(): LocationRequest {
-        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
-            .setWaitForAccurateLocation(true)//encadenar llamados al mismo método
-            .setMinUpdateIntervalMillis(3000).build()
-        return request
-
+        return LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+            .setWaitForAccurateLocation(true)
+            .setMinUpdateIntervalMillis(3000)
+            .build()
     }
 
     private fun createLocationCallback(): LocationCallback {
-        val callback = object : LocationCallback() {
+        return object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 super.onLocationResult(result)
                 val location = result.lastLocation
                 if (location != null) {
                     if (currentLocation == null) {
                         currentLocation = location
-                        // Update the map with the current location
                         val currentLatLng = LatLng(currentLocation!!.latitude, currentLocation!!.longitude)
                         mMap.addMarker(MarkerOptions().position(currentLatLng).title("Current Location"))
                         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
@@ -202,96 +177,84 @@ override fun onMapReady(googleMap: GoogleMap) {
                 }
             }
         }
-        return callback
     }
 
     private fun locationSettings() {
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
-            .addLocationRequest(locationRequest)
         val client: SettingsClient = LocationServices.getSettingsClient(this)
         val task = client.checkLocationSettings(builder.build())
-        task.addOnSuccessListener { locationSettingsRespose ->
+        task.addOnSuccessListener {
             startLocationUpdates()
-
         }
-        task.addOnFailureListener { excepcion ->
-            if (excepcion is ResolvableApiException) {
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
                 try {
-                    var isr: IntentSenderRequest =
-                        IntentSenderRequest.Builder(excepcion.resolution).build()
+                    val isr = IntentSenderRequest.Builder(exception.resolution).build()
                     locationSettings.launch(isr)
-
                 } catch (sendEx: IntentSender.SendIntentException) {
-                    //binding.altitude.text = "Device with no GPS!"
+                    // Handle the exception
                 }
             }
         }
     }
 
-    private fun startLocationUpdates(){
-
+    private fun startLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())//suscribirme a cambios, me falta la reacción a esos cambios (callback)
-        }else{
+            locationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        } else {
             Toast.makeText(this, "NO PERMISSION", Toast.LENGTH_SHORT).show()
         }
     }
 
-    override fun onPause(){
+    override fun onPause() {
         super.onPause()
         stopLocationUpdates()
         sensorManager.unregisterListener(sensorEventListener)
-
-
     }
 
-
-    private fun stopLocationUpdates(){
-        locationClient.removeLocationUpdates(locationCallback)//si entra en pausa, cancelo suscripción de GPS
+    private fun stopLocationUpdates() {
+        locationClient.removeLocationUpdates(locationCallback)
     }
 
-    private fun persistLocation(){
+    private fun persistLocation() {
         val myLocation = MyLocation(Date(System.currentTimeMillis()), currentLocation!!.latitude, currentLocation!!.longitude)
         locations.add(myLocation.toJSON())
-        val filename= "locations.json"
+        val filename = "locations.json"
         val file = File(baseContext.getExternalFilesDir(null), filename)
         val output = BufferedWriter(FileWriter(file))
         output.write(locations.toString())
         output.close()
-        Log.i("LOCATION", "File modified at path" + file)
+        Log.i("LOCATION", "File modified at path: $file")
     }
-//----------------------------------------------------------------------------------------------
 
-    fun distance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+    private fun distance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val dLat = Math.toRadians(lat1 - lat2)
         val dLon = Math.toRadians(lon1 - lon2)
         val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                 Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
                 Math.sin(dLon / 2) * Math.sin(dLon / 2)
         val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-        val result = RADIUD_OF_EARTH_KM * c * 1000 // Convert to meters
-        return Math.round(result * 1000.0) / 1000.0
+        return RADIUD_OF_EARTH_KM * c * 1000 // Convert to meters
     }
-    fun drawMarker(location : LatLng, description : String?, icon: Int){
-        val addressMarker = mMap.addMarker(MarkerOptions().position(location).icon(bitmapDescriptorFromVector(this,
-            icon)))!!
-        if(description!=null){
-            addressMarker.title=description
-        }
 
+    private fun drawMarker(location: LatLng, description: String?, icon: Int) {
+        val addressMarker = mMap.addMarker(MarkerOptions().position(location).icon(bitmapDescriptorFromVector(this, icon)))!!
+        if (description != null) {
+            addressMarker.title = description
+        }
         mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
         mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
     }
 
-    fun bitmapDescriptorFromVector(context : Context, vectorResId : Int) : BitmapDescriptor {
-        val vectorDrawable : Drawable = ContextCompat.getDrawable(context, vectorResId)!!
-        vectorDrawable.setBounds(0, 0, vectorDrawable.getIntrinsicWidth(), vectorDrawable.getIntrinsicHeight());
-        val bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(), vectorDrawable.getIntrinsicHeight(),
-            Bitmap.Config.ARGB_8888);
+    private fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor {
+        val vectorDrawable: Drawable = ContextCompat.getDrawable(context, vectorResId)!!
+        vectorDrawable.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
+        val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         vectorDrawable.draw(canvas)
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
+
     override fun onResume() {
         super.onResume()
         ligthSensor?.let {
@@ -299,67 +262,38 @@ override fun onMapReady(googleMap: GoogleMap) {
         }
     }
 
-
-    fun findAddress (location : LatLng):String?{
-        val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 2, /*Geocoder.GeocodeListener {  }*/)
-        if(addresses != null && !addresses.isEmpty()){
-            val addr = addresses.get(0)
-            val locname = addr.getAddressLine(0)
-            return locname
+    fun findAddress(location: LatLng): String? {
+        val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 2)
+        if (addresses != null && addresses.isNotEmpty()) {
+            return addresses[0].getAddressLine(0)
         }
         return null
     }
-    fun findLocation(address : String):LatLng?{
+
+    fun findLocation(address: String): LatLng? {
         val addresses = geocoder.getFromLocationName(address, 2)
-        if(addresses != null && !addresses.isEmpty()){
-            val addr = addresses.get(0)
-            val location = LatLng(addr.latitude, addr.
-            longitude)
-            return location
+        if (addresses != null && addresses.isNotEmpty()) {
+            val addr = addresses[0]
+            return LatLng(addr.latitude, addr.longitude)
         }
         return null
     }
-
 
     private fun createSensorEventListener(): SensorEventListener {
-        val listener : SensorEventListener = object : SensorEventListener {
+        return object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
-                //se autopregunta su estructura
-                //BASECONTEXT YA NO SIRVE PARA INTROSPECCIÓN DE OBJETOS
-                if(this@LocationActivity::mMap.isInitialized) {
-
-                    if (ligthSensor != null) {
-                        if (event != null) {
-                            if (event.values[0] < 5000) {
-                                //dark
-                                mMap.setMapStyle(
-                                    MapStyleOptions.loadRawResourceStyle(
-                                        baseContext,
-                                        R.raw.map_dark
-                                    )
-                                )
-
-                            } else {
-                                mMap.setMapStyle(
-                                    MapStyleOptions.loadRawResourceStyle(
-                                        baseContext,
-                                        R.raw.map_light
-                                    )
-                                )
-                            }
+                if (this@LocationActivity::mMap.isInitialized) {
+                    if (ligthSensor != null && event != null) {
+                        if (event.values[0] < 5000) {
+                            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(baseContext, R.raw.map_dark))
+                        } else {
+                            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(baseContext, R.raw.map_light))
                         }
                     }
                 }
             }
 
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-
-            }
-
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
-        return listener
-
     }
-
-
 }
