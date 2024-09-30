@@ -148,7 +148,6 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                         val formattedDistance = String.format("%.3f", distance)
                         Toast.makeText(this, "Distance to marker: $formattedDistance meters", Toast.LENGTH_SHORT).show()
                         drawRoute(GeoPoint(currentLoc.latitude, currentLoc.longitude), GeoPoint(location.latitude, location.longitude))
-                        mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
                         drawMarker(location, addressMarker, R.drawable.baseline_place_24)
                         drawMarker(LatLng(currentLoc.latitude, currentLoc.longitude), "Current Location ${findAddress(LatLng(currentLoc.latitude, currentLoc.longitude))}", R.drawable.baseline_place_24)
                     }
@@ -393,9 +392,13 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
             val latitude = jsonObject.getDouble("latitude")
             val longitude = jsonObject.getDouble("longitude")
             routePoints.add(GeoPoint(latitude, longitude))
+
+            val latLng = LatLng(latitude, longitude)
+            val address = findAddress(latLng)
+            drawMarker(latLng, address, R.drawable.baseline_place_24)
         }
 
-        if (routePoints.size < 2) {
+        if (routePoints.size < 1) {
             Toast.makeText(this, "Not enough points to draw a route", Toast.LENGTH_SHORT).show()
             return
         }
