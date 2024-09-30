@@ -24,4 +24,16 @@
         android:inputType="text"
         android:imeOptions="actionSearch"
         android:textStyle="bold"/>
+
+    <Button
+        android:id="@+id/rutaCompleta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="110dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        android:background="@drawable/round_corners"
+        android:text="Trazar ruta completa"
+        android:textColor="@color/white"
+        android:textStyle="bold" />
 </FrameLayout>

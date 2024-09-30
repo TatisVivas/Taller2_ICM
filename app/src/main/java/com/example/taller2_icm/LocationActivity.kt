@@ -47,14 +47,17 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.PolylineOptions
+import org.json.JSONArray
 import org.json.JSONObject
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.Polyline
+import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.File
+import java.io.FileReader
 import java.io.FileWriter
 import java.sql.Date
 
@@ -153,6 +156,12 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
             }
             return@setOnEditorActionListener true
+        }
+
+        binding.rutaCompleta.setOnClickListener {
+            val start = GeoPoint(currentLocation!!.latitude, currentLocation!!.longitude)
+            val finish = GeoPoint(4.60971, -74.08175)
+            drawRoute(start, finish)
         }
         // Get the SupportMapFragment and notify when the map is ready to be used
         val mapFragment = supportFragmentManager
@@ -363,4 +372,51 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
             mMap.addPolyline(polylineOptions)
         }
     }
+
+    fun drawRouteJson() {
+        val filename = "locations.json"
+        val file = File(baseContext.getExternalFilesDir(null), filename)
+        if (!file.exists()) {
+            Toast.makeText(this, "No locations found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val jsonString = BufferedReader(FileReader(file)).use { it.readText() }
+        val jsonArray = JSONArray(jsonString)
+        val routePoints = ArrayList<GeoPoint>()
+
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            val latitude = jsonObject.getDouble("latitude")
+            val longitude = jsonObject.getDouble("longitude")
+            routePoints.add(GeoPoint(latitude, longitude))
+        }
+
+        if (routePoints.size < 2) {
+            Toast.makeText(this, "Not enough points to draw a route", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val road = roadManager.getRoad(routePoints)
+        if (mMap != null) {
+            if (roadOverlay != null) {
+                // Remove the previous overlay from the map
+                (roadOverlay as? Overlay)?.let { overlay ->
+                    mMap.clear() // Clear all overlays
+                }
+            }
+            roadOverlay = RoadManager.buildRoadOverlay(road)
+            roadOverlay!!.outlinePaint.color = Color.RED
+            roadOverlay!!.outlinePaint.strokeWidth = 10F
+            // Add the new overlay to the map
+            val polylineOptions = PolylineOptions()
+            for (point in roadOverlay!!.points) {
+                polylineOptions.add(LatLng(point.latitude, point.longitude))
+            }
+            polylineOptions.color(Color.RED)
+            polylineOptions.width(10F)
+            mMap.addPolyline(polylineOptions)
+        }
+    }
+
 }
