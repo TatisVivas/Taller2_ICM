@@ -118,7 +118,7 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 val location = findLocation(address)
                 val addressMarker= findAddress(location!!)
                 if (location != null) {
-                    mMap.clear()
+                    //mMap.clear()
                     drawMarker(location, addressMarker, R.drawable.baseline_place_24)
                     mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
