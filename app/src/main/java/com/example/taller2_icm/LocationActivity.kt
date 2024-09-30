@@ -140,8 +140,10 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (location != null) {
                     //mMap.clear()
                     drawMarker(location, addressMarker, R.drawable.baseline_place_24)
+                    //hacer zoom al punto nuevo
                     mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
+
 
                     currentLocation?.let { currentLoc ->
                         val distance = distance(currentLoc.latitude, currentLoc.longitude, location.latitude, location.longitude)
@@ -150,6 +152,8 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                         drawRoute(GeoPoint(currentLoc.latitude, currentLoc.longitude), GeoPoint(location.latitude, location.longitude))
                         drawMarker(location, addressMarker, R.drawable.baseline_place_24)
                         drawMarker(LatLng(currentLoc.latitude, currentLoc.longitude), "Current Location ${findAddress(LatLng(currentLoc.latitude, currentLoc.longitude))}", R.drawable.baseline_place_24)
+                        mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
+                        mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
                     }
                 }
 
@@ -183,8 +187,8 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 drawMarker(it, address, R.drawable.baseline_place_24)
                 drawMarker(LatLng(location.latitude, location.longitude), "Current Location ${findAddress(LatLng(location.latitude, location.longitude))}", R.drawable.baseline_place_24)
                 //mover la camara a la nueva ubicacion seleccionada por el usuario
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(it))
                 mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(it))
                 locations.add(MyLocation(Date(System.currentTimeMillis()), it.latitude, it.longitude).toJSON())
                 persistLocation()
                 Log.i("LOCATIONNEW", "Location added to route")
@@ -211,7 +215,8 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                         currentLocation = location
                         val currentLatLng = LatLng(currentLocation!!.latitude, currentLocation!!.longitude)
                         mMap.addMarker(MarkerOptions().position(currentLatLng).title("Current Location ${findAddress(currentLatLng)}"))
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+                        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLatLng))
+                        mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
                     } else {
                         if (distance(currentLocation!!.latitude, currentLocation!!.longitude, location.latitude, location.longitude) > 30) {
                             currentLocation = location
