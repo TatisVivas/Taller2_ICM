@@ -189,9 +189,7 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 //mover la camara a la nueva ubicacion seleccionada por el usuario
                 mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(it))
-                locations.add(MyLocation(Date(System.currentTimeMillis()), it.latitude, it.longitude).toJSON())
-                persistLocation()
-                Log.i("LOCATIONNEW", "Location added to route")
+
 
             }
         }
