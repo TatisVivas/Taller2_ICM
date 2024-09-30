@@ -159,9 +159,8 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         binding.rutaCompleta.setOnClickListener {
-            val start = GeoPoint(currentLocation!!.latitude, currentLocation!!.longitude)
-            val finish = GeoPoint(4.60971, -74.08175)
-            drawRoute(start, finish)
+
+            drawRouteJson()
         }
         // Get the SupportMapFragment and notify when the map is ready to be used
         val mapFragment = supportFragmentManager
@@ -187,6 +186,9 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 //mover la camara a la nueva ubicacion seleccionada por el usuario
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(it))
                 mMap.moveCamera(CameraUpdateFactory.zoomTo(15f))
+                locations.add(MyLocation(Date(System.currentTimeMillis()), it.latitude, it.longitude).toJSON())
+                persistLocation()
+                Log.i("LOCATIONNEW", "Location added to route")
 
             }
         }
@@ -259,15 +261,16 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
         locationClient.removeLocationUpdates(locationCallback)
     }
 
-    private fun persistLocation() {
+
+    private fun persistLocation(){
         val myLocation = MyLocation(Date(System.currentTimeMillis()), currentLocation!!.latitude, currentLocation!!.longitude)
         locations.add(myLocation.toJSON())
-        val filename = "locations.json"
+        val filename= "locations.json"
         val file = File(baseContext.getExternalFilesDir(null), filename)
         val output = BufferedWriter(FileWriter(file))
         output.write(locations.toString())
         output.close()
-        Log.i("LOCATION", "File modified at path: $file")
+        Log.i("LOCATIONHELP", "File modified at path" + file)
     }
 
     private fun distance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
