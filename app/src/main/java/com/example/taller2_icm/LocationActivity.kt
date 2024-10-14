@@ -175,6 +175,8 @@ class LocationActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
 
         mMap = googleMap
+        mMap.uiSettings.setAllGesturesEnabled(true)
+        mMap.uiSettings.isZoomControlsEnabled = true
 
         mMap.setOnMapLongClickListener {
             val address = this.findAddress(it)
